@@ -54,18 +54,18 @@ public abstract class BaseAACCodec {
     private boolean mIsRunning;
     private Callback mAacCallback;
 
-    public interface Callback{
+    public interface Callback {
         void callback(byte[] data);
     }
 
-    public BaseAACCodec(int sampleRate,int channelCount, int oneFrameSize, int keyBitRate){
+    public BaseAACCodec(int sampleRate, int channelCount, int oneFrameSize, int keyBitRate) {
         mSampleRate = sampleRate;
         mOneFrameSize = oneFrameSize;
         mKeyBitRate = keyBitRate;
         mChannelCount = channelCount;
     }
 
-    public void start(){
+    public void start() {
         L.i(TAG, "编码器开始运转");
         if (!initAACMediaCodec()) {
             return;
@@ -92,14 +92,14 @@ public abstract class BaseAACCodec {
     /**
      * 退出编码器并释放销毁
      */
-    public void stopAndRelease(){
-        if (mDestroyCalled){
+    public void stopAndRelease() {
+        if (mDestroyCalled) {
             return;
         }
         mDestroyCalled = true;
 
         L.i(TAG, "编码器停止运转");
-        if (mIsRunning){
+        if (mIsRunning) {
             mInputHandler.post(new Runnable() {
                 @Override
                 public void run() {
@@ -128,7 +128,7 @@ public abstract class BaseAACCodec {
      */
     private boolean initAACMediaCodec() {
         try {
-            L.d("codec params" , mKeyBitRate + " " + mChannelCount + " " + mSampleRate);
+            L.d("codec params", mKeyBitRate + " " + mChannelCount + " " + mSampleRate);
             MediaFormat format = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC,
                 mSampleRate, mChannelCount);
             format.setInteger(MediaFormat.KEY_BIT_RATE, mKeyBitRate);
@@ -136,7 +136,7 @@ public abstract class BaseAACCodec {
             format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, mOneFrameSize);
             mMediaCodec = createCodec(format);
             mMediaCodec.start();
-        }catch (Exception e){
+        } catch (Exception e) {
             L.e(e);
             return false;
         }
@@ -148,7 +148,7 @@ public abstract class BaseAACCodec {
     /**
      * 编码PCM->aac
      */
-    public void input(final byte[] chunkPCM) {
+    public void input(final byte[] data, final int offset, final int length) {
         if (mIsRunning) {
             mInputHandler.post(new Runnable() {
                 @Override
@@ -166,15 +166,15 @@ public abstract class BaseAACCodec {
                                 return;
                             }
                             inputBuffer.clear();
-                            inputBuffer.limit(chunkPCM.length);
-                            inputBuffer.put(chunkPCM);
-                            mMediaCodec.queueInputBuffer(inputIndex, 0, chunkPCM.length, 0, 0);
-                        }catch (CodecException e){
-                            if (!e.isTransient()){
+                            inputBuffer.limit(data.length);
+                            inputBuffer.put(data, offset, length);
+                            mMediaCodec.queueInputBuffer(inputIndex, 0, data.length, 0, 0);
+                        } catch (CodecException e) {
+                            if (!e.isTransient()) {
                                 L.e(e);
                                 stopAndRelease();
                             }
-                        }catch (Exception e){
+                        } catch (Exception e) {
                             L.e(e);
                             stopAndRelease();
                         }
@@ -195,56 +195,56 @@ public abstract class BaseAACCodec {
         L.i(TAG, "启动编码器的输出线程");
         BufferInfo bufferInfo = new BufferInfo();
 
-        while(mIsRunning) {
-            try{
+        while (mIsRunning) {
+            try {
                 final long start = System.currentTimeMillis();
-            int outputIndex = mMediaCodec.dequeueOutputBuffer(bufferInfo, DEFAULT_WAIT_INTERVAL);
-            if (outputIndex < 0){
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    L.e(e);
-                }
-            }else {
-                ByteBuffer outputBuffer = mMediaCodec.getOutputBuffer(outputIndex);//拿到输出Buffer
-                byte[] chunkAudio = getOutBytes(bufferInfo, outputBuffer);
-                if (mAacCallback != null) {
-                    mAacCallback.callback(chunkAudio);
-                }
-
-                mMediaCodec.releaseOutputBuffer(outputIndex, false);
-                try {
-                    long sleepMillis = 20 - (System.currentTimeMillis() - start);
-                    if (sleepMillis > 0) {
-                        Thread.sleep(sleepMillis);
+                int outputIndex = mMediaCodec.dequeueOutputBuffer(bufferInfo, DEFAULT_WAIT_INTERVAL);
+                if (outputIndex < 0) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        L.e(e);
                     }
-                } catch (InterruptedException e) {
-                    L.e(e);
+                } else {
+                    ByteBuffer outputBuffer = mMediaCodec.getOutputBuffer(outputIndex);//拿到输出Buffer
+                    byte[] chunkAudio = getOutBytes(bufferInfo, outputBuffer);
+                    if (mAacCallback != null) {
+                        mAacCallback.callback(chunkAudio);
+                    }
+
+                    mMediaCodec.releaseOutputBuffer(outputIndex, false);
+                    try {
+                        long sleepMillis = 20 - (System.currentTimeMillis() - start);
+                        if (sleepMillis > 0) {
+                            Thread.sleep(sleepMillis);
+                        }
+                    } catch (InterruptedException e) {
+                        L.e(e);
+                    }
                 }
-            }}catch (CodecException e){
+            } catch (CodecException e) {
                 L.e(e);
 
-                if (!e.isTransient()){
+                if (!e.isTransient()) {
                     stopAndRelease();
                 }
-            }catch (Exception e){
+            } catch (Exception e) {
                 stopAndRelease();
                 L.e(e);
             }
         }
 
-        //退出循环时就是停止录音了， 这个时候停掉mediacodec
         try {
             mMediaCodec.stop();
             mMediaCodec.release();
-        }catch (Exception e){
+        } catch (Exception e) {
             L.e(e);
         }
     }
 
     protected abstract byte[] getOutBytes(BufferInfo bufferInfo, ByteBuffer outputBuffer);
 
-    public void setAacCallback(Callback aacCallback) {
+    public void setOutputCallback(Callback aacCallback) {
         mAacCallback = aacCallback;
     }
 }

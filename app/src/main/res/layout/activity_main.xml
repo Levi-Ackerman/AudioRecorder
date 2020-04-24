@@ -20,6 +20,13 @@
         android:onClick="onRecordStop"
         android:text="停止录音" />
 
+    <Button
+        android:id="@+id/play"
+        android:onClick="onPlayAudio"
+        android:text="播放录音"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"/>
+
     <TextView
         android:id="@+id/tv_status"
         android:text="点击开始录音"

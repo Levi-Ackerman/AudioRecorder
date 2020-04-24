@@ -45,7 +45,7 @@ public class AudioRecorder {
      * 指定音频量化位数 ,在AudioFormaat类中指定了以下各种可能的常量。通常我们选择ENCODING_PCM_16BIT和ENCODING_PCM_8BIT PCM代表的是脉冲编码调制，它实际上是原始音频样本。
      * /* 因此可以设置每个样本的分辨率为16位或者8位，16位将占用更多的空间和处理能力,表示的音频也更加接近真实
      */
-    private static final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
+    public static final int AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
     /**
      * 指定缓冲区大小,最小缓冲区的十倍
      */
