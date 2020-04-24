@@ -10,6 +10,7 @@ import android.media.MediaCodecInfo.CodecProfileLevel;
 import android.media.MediaFormat;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.widget.TextView;
 import mikasa.ackerman.audiorecorder.util.L;
 
 /**

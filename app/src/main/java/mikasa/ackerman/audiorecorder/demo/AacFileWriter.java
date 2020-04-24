@@ -30,15 +30,20 @@ import android.content.Context;
  */
 public class AacFileWriter {
     private OutputStream mFileOutputStream;
+    private final File mAacFile;
 
     public AacFileWriter(Context context){
         File aacDir = context.getExternalFilesDir("aac");
-        File aacFile = new File(aacDir, System.currentTimeMillis()+".aac");
+        mAacFile = new File(aacDir, System.currentTimeMillis()+".aac");
         try {
-            mFileOutputStream = new FileOutputStream(aacFile);
+            mFileOutputStream = new FileOutputStream(mAacFile);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+    }
+
+    public String getFileName(){
+        return mAacFile.getAbsolutePath();
     }
 
     public void write(byte[] aac){
