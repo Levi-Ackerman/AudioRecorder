@@ -1,4 +1,4 @@
-package mikasa.ackerman.audiorecorder.aacencoder;
+package mikasa.ackerman.audiorecorder.aacencodec;
 
 import java.nio.ByteBuffer;
 
@@ -67,7 +67,7 @@ public abstract class BaseAACCodec {
 
     public void start(){
         L.i(TAG, "编码器开始运转");
-        if (!initAACMediaEncode()) {
+        if (!initAACMediaCodec()) {
             return;
         }
 
@@ -126,16 +126,15 @@ public abstract class BaseAACCodec {
     /**
      * 初始化AAC编码器
      */
-    private boolean initAACMediaEncode() {
+    private boolean initAACMediaCodec() {
         try {
-            L.d("aac encode" , mKeyBitRate + " " + mChannelCount + " " + mSampleRate);
-            MediaFormat encodeFormat = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC,
+            L.d("codec params" , mKeyBitRate + " " + mChannelCount + " " + mSampleRate);
+            MediaFormat format = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC,
                 mSampleRate, mChannelCount);
-            encodeFormat.setInteger(MediaFormat.KEY_BIT_RATE, mKeyBitRate);
-            encodeFormat.setInteger(MediaFormat.KEY_AAC_PROFILE, CodecProfileLevel.AACObjectLC);
-            encodeFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, mOneFrameSize);
-            mMediaCodec = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_AAC);
-            mMediaCodec.configure(encodeFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
+            format.setInteger(MediaFormat.KEY_BIT_RATE, mKeyBitRate);
+            format.setInteger(MediaFormat.KEY_AAC_PROFILE, CodecProfileLevel.AACObjectLC);
+            format.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, mOneFrameSize);
+            mMediaCodec = createCodec(format);
             mMediaCodec.start();
         }catch (Exception e){
             L.e(e);
@@ -143,6 +142,8 @@ public abstract class BaseAACCodec {
         }
         return true;
     }
+
+    protected abstract MediaCodec createCodec(MediaFormat format) throws Exception;
 
     /**
      * 编码PCM->aac
@@ -192,33 +193,21 @@ public abstract class BaseAACCodec {
 
     private void startOutput() {
         L.i(TAG, "启动编码器的输出线程");
-        int outputIndex;
-        int outBitSize;
-        int outPacketSize;
-        ByteBuffer outputBuffer;
-        byte[] chunkAudio;
         BufferInfo bufferInfo = new BufferInfo();
 
         while(mIsRunning) {
             try{
                 final long start = System.currentTimeMillis();
-            outputIndex = mMediaCodec.dequeueOutputBuffer(bufferInfo, DEFAULT_WAIT_INTERVAL);
+            int outputIndex = mMediaCodec.dequeueOutputBuffer(bufferInfo, DEFAULT_WAIT_INTERVAL);
             if (outputIndex < 0){
                 try {
-                    Thread.sleep(1000);
+                    Thread.sleep(100);
                 } catch (InterruptedException e) {
                     L.e(e);
                 }
             }else {
-                outputBuffer = mMediaCodec.getOutputBuffer(outputIndex);//拿到输出Buffer
-                outBitSize = bufferInfo.size;
-                outPacketSize = outBitSize + 7;//7为ADTS头部的大小
-                outputBuffer.position(bufferInfo.offset);
-                outputBuffer.limit(bufferInfo.offset + outBitSize);
-                chunkAudio = new byte[outPacketSize];
-                addADTStoPacket(chunkAudio, outPacketSize);//添加ADTS 代码后面会贴上
-                outputBuffer.get(chunkAudio, 7, outBitSize);//将编码得到的AAC数据 取出到byte[]中 偏移量offset=7 你懂得
-                //                showLog("outPacketSize:" + outPacketSize + " encodeOutBufferRemain:" + outputBuffer.remaining());
+                ByteBuffer outputBuffer = mMediaCodec.getOutputBuffer(outputIndex);//拿到输出Buffer
+                byte[] chunkAudio = getOutBytes(bufferInfo, outputBuffer);
                 if (mAacCallback != null) {
                     mAacCallback.callback(chunkAudio);
                 }
@@ -253,34 +242,7 @@ public abstract class BaseAACCodec {
         }
     }
 
-
-    /**
-     * 添加ADTS头
-     * @param packet
-     * @param packetLen
-     */
-    private void addADTStoPacket(byte[] packet, int packetLen) {
-        int profile = 2; // AAC LC
-        int freqIdx = 3; // 采样率用一个索引号表示，3表示48k，4表示44.1k
-        int chanCfg = 2; // channel_configuration，声道数
-
-        //ADTS头是7个字节，也就是56比特（56bit）
-        //syncword：0-11个比特（3个16进制数）恒为0xFFF，便于解码器找到开始的位置
-        //ID：第12个位，0 for MPEG-4， 1 for MPEG-2
-        //Layer：第13，14，固定为00
-        //protection_absent：第15，是否有CRC校验， 1没有，0有 （和常规的1有0无是反过来的，如果有CRC校验，头部会加入两个字节校验码，变成9字节的头）
-        //profile：第16，17位，Audio Object Types的索引-1，如01 表示 AAC LC(但在索引表里是2)
-        //sampleRate：
-
-        // fill in ADTS data
-        packet[0] = (byte) 0xFF;
-        packet[1] = (byte) 0xF9;
-        packet[2] = (byte) (((profile - 1) << 6) + (freqIdx << 2) + (chanCfg >> 2));
-        packet[3] = (byte) (((chanCfg & 3) << 6) + (packetLen >> 11));
-        packet[4] = (byte) ((packetLen & 0x7FF) >> 3);
-        packet[5] = (byte) (((packetLen & 7) << 5) + 0x1F);
-        packet[6] = (byte) 0xFC;
-    }
+    protected abstract byte[] getOutBytes(BufferInfo bufferInfo, ByteBuffer outputBuffer);
 
     public void setAacCallback(Callback aacCallback) {
         mAacCallback = aacCallback;
