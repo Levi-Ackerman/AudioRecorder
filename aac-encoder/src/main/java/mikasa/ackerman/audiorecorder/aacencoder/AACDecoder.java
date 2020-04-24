@@ -3,7 +3,7 @@ package mikasa.ackerman.audiorecorder.aacencoder;
 /**
  * AudioRecorder
  *
- * <p>Title: AAC编码器</p>
+ * <p>Title: </p>
  *
  * <p>Description: </p>
  * <p>
@@ -18,10 +18,10 @@ package mikasa.ackerman.audiorecorder.aacencoder;
  *
  * @author zhengxian.lzx@alibaba-inc.com
  * @version 1.0
- * 2020-04-24 19:42
+ * 2020-04-24 19:47
  */
-public class AACEncoder extends BaseAACCodec {
-    public AACEncoder(int sampleRate, int channelCount, int oneFrameSize, int keyBitRate) {
+public class AACDecoder extends BaseAACCodec {
+    public AACDecoder(int sampleRate, int channelCount, int oneFrameSize, int keyBitRate) {
         super(sampleRate, channelCount, oneFrameSize, keyBitRate);
     }
 }

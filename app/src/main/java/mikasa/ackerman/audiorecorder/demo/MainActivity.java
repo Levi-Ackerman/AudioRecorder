@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.runtime.Permission;
 import mikasa.ackerman.audiorecorder.aacencoder.AACEncoder;
+import mikasa.ackerman.audiorecorder.aacencoder.BaseAACCodec;
 import mikasa.ackerman.audiorecorder.audiorecord.AuRecordManager;
 import mikasa.ackerman.audiorecorder.audiorecord.AudioRecorder;
 import mikasa.ackerman.audiorecorder.audiorecord.IPCMDataCallback;
@@ -22,7 +23,7 @@ public class MainActivity extends AppCompatActivity implements IPCMDataCallback 
     /**
      * 转码器，将PCM数据硬编码成AAC数据
      */
-    private AACEncoder mAACEncoder;
+    private BaseAACCodec mAACEncoder;
 
     /**
      * 文件输出，将AAC数据写出到文件保存
@@ -43,7 +44,7 @@ public class MainActivity extends AppCompatActivity implements IPCMDataCallback 
         mFileWriter = new AacFileWriter(getApplicationContext());
 
         mAACEncoder = new AACEncoder(AudioRecorder.SAMPLE_RATE_IN_HZ, AudioRecorder.getChannelCount(),
-            AudioRecorder.BUFFER_SIZE_IN_BYTES);
+            AudioRecorder.BUFFER_SIZE_IN_BYTES, 128000);
         mAACEncoder.setAacCallback(aac -> {
             L.i("onAacCallback:", "aac callback length: " + aac.length);
             mFileWriter.write(aac);
@@ -93,7 +94,7 @@ public class MainActivity extends AppCompatActivity implements IPCMDataCallback 
     @Override
     public void onPCMDataCallback(byte[] pcm) {
         L.i("PCMDataCallback：", "onPcmDataCallback length: " + pcm.length);
-        mAACEncoder.putPCM(pcm);
+        mAACEncoder.input(pcm);
         runOnUiThread(()->{
             long seconds = (System.currentTimeMillis() - mStartTime) /1000;
             mTvTime.setText(String.valueOf(seconds));
