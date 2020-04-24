@@ -1,2 +1,2 @@
-include ':app', 'audio-record'
+include ':app', 'audio-record', 'aac-encoder', 'util'
 rootProject.name='AudioRecorder'

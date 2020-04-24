@@ -4,8 +4,8 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Looper;
 import android.os.Message;
-import mikasa.ackerman.audiorecorder.audiorecord.util.AssertUtil;
-import mikasa.ackerman.audiorecorder.audiorecord.util.L;
+import mikasa.ackerman.audiorecorder.util.AssertUtil;
+import mikasa.ackerman.audiorecorder.util.L;
 
 /**
  * alisdk-review

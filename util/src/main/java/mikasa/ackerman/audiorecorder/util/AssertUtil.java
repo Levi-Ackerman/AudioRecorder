@@ -1,7 +1,4 @@
-package mikasa.ackerman.audiorecorder.audiorecord.util;
-
-import mikasa.ackerman.audiorecorder.audiorecord.BuildConfig;
-
+package mikasa.ackerman.audiorecorder.util;
 /**
  * AudioRecorder
  *

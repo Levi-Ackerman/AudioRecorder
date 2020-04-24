@@ -7,7 +7,7 @@ import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.runtime.Permission;
 import mikasa.ackerman.audiorecorder.audiorecord.AuRecordManager;
 import mikasa.ackerman.audiorecorder.audiorecord.IPCMDataCallback;
-import mikasa.ackerman.audiorecorder.audiorecord.util.L;
+import mikasa.ackerman.audiorecorder.util.L;
 
 public class MainActivity extends AppCompatActivity implements IPCMDataCallback{
 

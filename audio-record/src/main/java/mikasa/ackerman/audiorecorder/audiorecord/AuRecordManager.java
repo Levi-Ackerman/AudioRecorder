@@ -9,7 +9,7 @@ import android.os.HandlerThread;
 import mikasa.ackerman.audiorecorder.audiorecord.RecordStateMachine.IActionCallback;
 import mikasa.ackerman.audiorecorder.audiorecord.adapter.IPermissionCallback;
 import mikasa.ackerman.audiorecorder.audiorecord.adapter.IPermissioner;
-import mikasa.ackerman.audiorecorder.audiorecord.util.AssertUtil;
+import mikasa.ackerman.audiorecorder.util.AssertUtil;
 
 /**
  * cloud-dragon-game-app-android的副本
