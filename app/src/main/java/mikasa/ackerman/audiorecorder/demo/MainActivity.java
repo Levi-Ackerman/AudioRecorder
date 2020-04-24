@@ -18,18 +18,28 @@ public class MainActivity extends AppCompatActivity implements IPCMDataCallback{
      */
     private AuRecordManager mAuRecordManager;
 
+    /**
+     * 转码器，将PCM数据硬编码成AAC数据
+     */
     private AACEncoder mAACEncoder;
+
+    /**
+     * 文件输出，将AAC数据写出到文件保存
+     */
+    private AacFileWriter mFileWriter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        mFileWriter = new AacFileWriter(getApplicationContext());
+
         mAACEncoder = new AACEncoder(AudioRecorder.SAMPLE_RATE_IN_HZ, AudioRecorder.getChannelCount(), AudioRecorder.BUFFER_SIZE_IN_BYTES);
         mAACEncoder.setAacCallback(aac ->{
             L.i("onAacCallback:", "aac callback length: "+aac.length);
+            mFileWriter.write(aac);
         });
-
 
         mAuRecordManager = AuRecordManager.instance();
         mAuRecordManager.init(this, callback ->
@@ -49,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements IPCMDataCallback{
     public void onRecordStop(View view) {
         mAACEncoder.stopAndRelease();
         mAuRecordManager.unBindRecord(this);
+        mFileWriter.finish();
     }
 
     @Override
