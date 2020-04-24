@@ -28,6 +28,7 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:1.1.3'
     implementation project(":audio-record")
     implementation 'com.yanzhenjie:permission:2.0.3'
-    compile project(path: ':util')
+    implementation project(path: ':util')
+    implementation project(path: ':aac-encoder')
 
 }

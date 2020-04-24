@@ -5,18 +5,32 @@ import android.view.View;
 import androidx.appcompat.app.AppCompatActivity;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.runtime.Permission;
+import mikasa.ackerman.audiorecorder.aacencoder.AACEncoder;
 import mikasa.ackerman.audiorecorder.audiorecord.AuRecordManager;
+import mikasa.ackerman.audiorecorder.audiorecord.AudioRecorder;
 import mikasa.ackerman.audiorecorder.audiorecord.IPCMDataCallback;
 import mikasa.ackerman.audiorecorder.util.L;
 
 public class MainActivity extends AppCompatActivity implements IPCMDataCallback{
 
+    /**
+     * 录音机，负责产出PCM数据
+     */
     private AuRecordManager mAuRecordManager;
+
+    private AACEncoder mAACEncoder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        mAACEncoder = new AACEncoder(AudioRecorder.SAMPLE_RATE_IN_HZ, AudioRecorder.getChannelCount(), AudioRecorder.BUFFER_SIZE_IN_BYTES);
+        mAACEncoder.setAacCallback(aac ->{
+            L.i("onAacCallback:", "aac callback length: "+aac.length);
+        });
+
+
         mAuRecordManager = AuRecordManager.instance();
         mAuRecordManager.init(this, callback ->
             AndPermission.with(MainActivity.this)
@@ -29,9 +43,11 @@ public class MainActivity extends AppCompatActivity implements IPCMDataCallback{
 
     public void onRecordStart(View view) {
         mAuRecordManager.bindRecord(this);
+        mAACEncoder.start();
     }
 
     public void onRecordStop(View view) {
+        mAACEncoder.stopAndRelease();
         mAuRecordManager.unBindRecord(this);
     }
 
@@ -53,6 +69,7 @@ public class MainActivity extends AppCompatActivity implements IPCMDataCallback{
     @Override
     public void onPCMDataCallback(byte[] pcm) {
         L.i("PCMDataCallback：", "onPcmDataCallback length: "+pcm.length);
+        mAACEncoder.putPCM(pcm);
     }
 
     @Override
