@@ -1,19 +1,11 @@
 package mikasa.ackerman.audiorecorder.demo;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-
-import android.media.AudioFormat;
-import android.media.AudioManager;
-import android.media.AudioTrack;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
 import androidx.appcompat.app.AppCompatActivity;
 import com.yanzhenjie.permission.AndPermission;
 import com.yanzhenjie.permission.runtime.Permission;
-import mikasa.ackerman.audiorecorder.aacencodec.AACDecoder;
 import mikasa.ackerman.audiorecorder.aacencodec.AACEncoder;
 import mikasa.ackerman.audiorecorder.aacencodec.BaseAACCodec;
 import mikasa.ackerman.audiorecorder.audiorecord.AuRecordManager;
@@ -38,16 +30,6 @@ public class MainActivity extends AppCompatActivity implements IPCMDataCallback 
      */
     private AacFileWriter mFileWriter;
 
-    /**
-     * 解码器，将AAC数据解码成PCM数据
-     */
-    private BaseAACCodec mAACDecoder;
-
-    /**
-     * 播放器，将PCM数据播放出来
-     */
-    private AudioTrack mAudioTrack;
-
     private TextView mTvStatus, mTvTime;
     private long mStartTime;
 
@@ -67,16 +49,6 @@ public class MainActivity extends AppCompatActivity implements IPCMDataCallback 
             L.i("onAacCallback:", "aac callback length: " + aac.length);
             mFileWriter.write(aac);
         });
-
-        mAACDecoder = new AACDecoder(AudioRecorder.SAMPLE_RATE_IN_HZ, AudioRecorder.getChannelCount(),
-            AudioRecorder.BUFFER_SIZE_IN_BYTES, 128000);
-        mAACDecoder.setOutputCallback(pcm->{
-            L.i("onPcmCallback:", "pcm decode length: " +pcm.length);
-            mAudioTrack.write(pcm,0, pcm.length);
-        });
-
-        mAudioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, AudioRecorder.SAMPLE_RATE_IN_HZ, AudioFormat.CHANNEL_OUT_STEREO,
-            AudioRecorder.AUDIO_FORMAT,AudioRecorder.BUFFER_SIZE_IN_BYTES, AudioTrack.MODE_STREAM);
 
         mAuRecordManager = AuRecordManager.instance();
         mAuRecordManager.init(this, callback ->
@@ -138,18 +110,6 @@ public class MainActivity extends AppCompatActivity implements IPCMDataCallback 
     }
 
     public void onPlayAudio(View view) {
-        mAudioTrack.play();
-        mAACDecoder.start();
-        try {
-            InputStream inputStream = new FileInputStream(mFileWriter.getFileName());
-            byte[] buffer = new byte[AudioRecorder.BUFFER_SIZE_IN_BYTES];
-            int length;
-            while ((length = inputStream.read(buffer))>0){
-                mAACDecoder.input(buffer, 0, length);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        //mAACDecoder.stopAndRelease();
+        new AACPlayer().playDemo();
     }
 }
